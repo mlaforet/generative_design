@@ -2,24 +2,29 @@
 	display: flex;
 	flex-flow: row wrap;
 	justify-content: center;
+	align-items: center;
 }
 
 .outer-square {
-	width: 350px;
-	height: 350px;
+	width: 355px;
+	height: 355px;
 	margin: auto;
 	margin-top: 2.5px;
 	margin-bottom: 2.5px;
-	background-color: tan;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	transform: rotate(45deg);
 }
 
 .inner-square {
-	align-items: center;
-	width: 150px;
-	height: 150px;
-	margin: auto;
+	width: 300px;
+	height: 300px;
+	opacity: 0.8;
+	transform: rotate(45deg);
+/*	width: 325px;
+	height: 325px;*/
 	margin-top: 100px;
 	margin-bottom: 100px;
-	background-color: tomato;
 }
 
