@@ -1,0 +1,29 @@
+{
+  "name": "generative_design",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/.bin/webpack --config webpack.config.js --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlafore3/generative_design.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mlafore3/generative_design/issues"
+  },
+  "homepage": "https://github.com/mlafore3/generative_design#readme",
+  "dependencies": {
+    "three": "^0.88.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "webpack": "^3.8.1",
+    "webpack-bundle-tracker": "^0.2.0"
+  }
+}
