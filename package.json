@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/mlafore3/generative_design#readme",
   "dependencies": {
+    "p5": "^0.5.16",
     "three": "^0.88.0"
   },
   "devDependencies": {

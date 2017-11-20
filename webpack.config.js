@@ -6,12 +6,15 @@ module.exports = {
   // the base directry (absolute path) for resolving the entry option
   context: __dirname,
 
-  entry: './assets/index.js',
+  entry: {
+    three: './assets/index.js',
+    p5_sunburst: './assets/p5/sunburst/index.js'
+  },
 
   output: {
     // where you want your compiled bundle to be stored
     path: path.resolve('./static/bundles/'),
-    filename: 'bundle.js',
+    filename: '[name].bundle.js',
   },
 
   plugins: [
