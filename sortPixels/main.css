@@ -1,9 +1,0 @@
-body {
-	display: flex;
-	height: 100vh;
-	margin: 0;
-}
-
-.container {
-	flex: 1;
-}

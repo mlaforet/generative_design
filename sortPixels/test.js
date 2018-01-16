@@ -1,0 +1,186 @@
+var colorSet = new Map(); // maps color value to pixel info
+
+// var img = document.createElement('img');
+// var canvas = document.createElement('canvas');
+var ctx;
+var img;
+
+// I use state to determine whether it should expand or collapse
+var currentStage = 1;
+
+// This is to properly scale the height of the chart
+var maxColorsInBin = 0;
+
+// Width and height of the working image
+var width, height;
+
+// Make sure image has CORS setup, otherwise we will not have access
+// to it
+// img.crossOrigin = document.getElementById('image');
+
+// When image is loaded - run the code.
+document.addEventListener("DOMContentLoaded", function() {
+  var img = new Object();
+  var canvas = new Object();
+  canvas = document.getElementById('image_canvas');
+  img.src = document.getElementById('image');
+  console.log(img, canvas)
+  width = canvas.width = img.src.width;
+  height = canvas.height = img.src.height;
+
+  start(img, canvas);
+});
+
+//img.src = document.getElementById('image');
+
+function start(img, canvas) {
+  //var ctx = new Object();
+  ctx = canvas.getContext('2d');
+  console.log(ctx);
+  ctx.drawImage(img.src, 0, 0);
+
+  width = canvas.width;
+  height = canvas.height;
+
+  var imgData = ctx.getImageData(0, 0, width, height);
+  var pixels = imgData.data;
+
+  // We are going to collect pixel values first
+  for (var x = 0; x < width; ++x) {
+    for (var y = 0; y < height; ++y) {
+      var i = (x + y * width) * 4;
+      var r = pixels[i + 0];
+      var g = pixels[i + 1];
+      var b = pixels[i + 2];
+      var a = pixels[i + 3];
+      var color = chroma(r, g, b) 
+      var colorKey = color.get('hsl.l')
+      var pixelInfo = colorSet.get(colorKey);
+      if (!pixelInfo) {
+        pixelInfo = {
+          points: [],
+        };
+        colorSet.set(colorKey, pixelInfo);
+      }
+
+      pixelInfo.points.push({
+        // original position of a pixel
+        x: x,
+        y: y,
+
+        // Randomly assign animation lifespan
+        timeSpan: Math.round(Math.random() * 120) + 30,
+
+        // current frame number, used for interpolation
+        frame: 0,
+
+        // Where this pixel should go? Will be computed by computeDestinations()
+        destX: 0,
+        destY: 0,
+
+        // Current color
+        color: color
+      });
+
+      // We need to know the highest point of a chart, to properly scale it inside
+      // available canvas
+      if (pixelInfo.points.length > maxColorsInBin) maxColorsInBin = pixelInfo.points.length;
+    }
+  }
+
+  // Now that we have all pixels collected, lets figure out.
+  computeDestinations();
+
+  document.body.appendChild(canvas);
+
+  // I did a small pause before initial animation, to set the stage
+  setTimeout(() => { requestAnimationFrame(move); }, 1000);
+}
+
+function interpolate(t) {
+  // This is easeInOutQuad function. See more here https://gist.github.com/gre/1650294
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+function lerp(a, b, t) {
+  // simple linear interpolation.
+  return b * t + a * (1 - t);
+}
+
+// Main animation loop
+function move(ctx) {
+  // When all pixels cannot be moved anymore, we switch the mode.
+  var hasMore = false;
+  console.log(ctx);
+  // Need to pick neutral background color to not blend with original colors
+  ctx.fillStyle = '#676767';
+  ctx.fillRect(0, 0, width, height);
+
+  var imgData = ctx.getImageData(0, 0, width, height);
+  var pixels = imgData.data;
+
+  // Okay, let's move the pixels
+  colorSet.forEach((pixelInfo, colorKey) => {
+    pixelInfo.points.forEach((point) => {
+      // given current frame, use easing to figure out offset of a pixel
+      var t = interpolate(point.frame/point.timeSpan);
+
+      if (currentStage === 1 && point.frame < point.timeSpan) {
+        point.frame += 1;
+        // if at least one point was moved - keep trying on the next frame
+        hasMore = true;
+      }  else if (currentStage === 2 & point.frame > 0) {
+        point.frame -= 1;
+        hasMore = true;
+        // I want to restore portrait faster than collapsing it:
+        if (point.frame > 0) point.frame -= 1;
+      }
+
+      var x = Math.round(lerp(point.x, point.destX, t));
+      var y = Math.round(lerp(point.y, point.destY, t));
+
+      // Color has four components, thus multplying by 4
+      var pixelIndex = (x + y * width) * 4;
+
+      var color = point.color.rgba();
+      pixels[pixelIndex + 0] = color[0];
+      pixels[pixelIndex + 1] = color[1];
+      pixels[pixelIndex + 2] = color[2];
+      pixels[pixelIndex + 3] = color[3] * 255;
+    });
+  });
+
+  // All pixels updated on this frame, lets draw them
+  ctx.putImageData(imgData, 0, 0);
+  
+  if (!hasMore) {
+    // 3 is just a trick. If current state can be only 1 or 2, then
+    // assigning 3 - currentState guarantees that we flip only between
+    // these two states.
+    currentStage = 3 - currentStage;
+    hasMore = true;
+    // Start next loop after a little pause
+    setTimeout(() => requestAnimationFrame(move), 1000);
+  } else {
+    requestAnimationFrame(move);
+  }
+}
+
+function computeDestinations() {
+  // This function computes where the pixel should go, based on its value
+  var binCount = 256;
+  var binWidth = (width/binCount);
+
+  colorSet.forEach((pixelInfo, colorKey) => {
+    var pointBin = colorKey * binCount;
+    var xOffset = pointBin * binWidth;
+
+    var yOffset = 1/maxColorsInBin;
+
+    pixelInfo.points.forEach((point, idx) => {
+      point.destX = xOffset;
+      // I add small coefficients to make a padding.
+      point.destY = height * 0.85 - 0.80 * height * idx /maxColorsInBin;
+    })
+  });
+}
