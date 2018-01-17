@@ -80,7 +80,9 @@
             // original position of a pixel
             y: y,
             x: x,
-
+            d: 1 - chroma.distance('#ffffff', color) / (color.get('rgb')[0] * 0.222 + color.get('rgb')[1] * 0.707 + color.get('rgb')[2] * 0.071),
+            //d: chroma.distance('#ffffff', color),
+            //d: Math.round(color.get('rgb')[0] * 0.222 + color.get('rgb')[1] * 0.707 + color.get('rgb')[2] * 0.071),
             // Randomly assign animation lifespan
             timeSpan: Math.round(Math.random() * 120) + 30,
 
@@ -97,8 +99,11 @@
         }
         var pixelArray = manipulatePixels(pixels);
         var sortedArray = originalArray.concat().sort(function(a, b) {
-          return ((b.color.get('hsl')[0] + b.color.get('hsl')[1] * 2 + b.color.get('hsl')[2] * 5) - 
-            (a.color.get('hsl')[0] + a.color.get('hsl')[1] * 2 + b.color.get('hsl')[2] * 5))
+          return b.d - a.d
+          //return (b.d / (b.color.get('rgb')[0] / 100)) - (a.d / (a.color.get('rgb')[0] / 100))
+          //return (Math.round(b.color.get('rgb')[0] * 0.222 + b.color.get('rgb')[1] * 0.707 + b.color.get('rgb')[2] * 0.071)) - (Math.round(a.color.get('rgb')[0] * 0.222 + a.color.get('rgb')[1] * 0.707 + a.color.get('rgb')[2] * 0.071))
+          // return ((b.color.get('hsl')[0] + b.color.get('hsl')[1] * 2 + b.color.get('hsl')[2] * 5) - 
+          //   (a.color.get('hsl')[0] + a.color.get('hsl')[1] * 2 + b.color.get('hsl')[2] * 5))
           //return b.color.get('rgb')[0] - a.color.get('rgb')[0]
         });
         sortedArray.map((obj, index) => {pixelMap.set(String(obj.x) + ',' + String(obj.y), index);});
@@ -128,9 +133,6 @@
       function move() {
         // When all pixels cannot be moved anymore, we switch the mode.
         var hasMore = false;
-        // Need to pick neutral background color to not blend with original colors
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
 
         var imgData = ctx.getImageData(0, 0, width, height);
         var pixels = imgData.data;
@@ -142,11 +144,11 @@
             point.frame += 1;
             // if at least one point was moved - keep trying on the next frame
             hasMore = true;
-            if (point.frame > 0) point.frame += 2;
+            // if (point.frame > 0) point.frame += 2;
           }  else if (currentStage === 2 & point.frame > 0) {
             point.frame -= 1;
             hasMore = true;
-            if (point.frame > 0) point.frame -= 2;
+            // if (point.frame > 0) point.frame -= 2;
           }
 
           var x = Math.round(lerp(point.x, point.destX, t));
