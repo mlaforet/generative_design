@@ -7,7 +7,7 @@ var img = new Object();
 var canvas = new Object();
 var pixelMap = new Map(); // abiity to iteratively set key-value pairs
 var originalArray = []
-var currentStage = 1;
+var currentState = 1;
 
 // intiate pixel sorter after the image is loaded
 document.addEventListener("DOMContentLoaded", function() {
@@ -16,11 +16,11 @@ document.addEventListener("DOMContentLoaded", function() {
   width = canvas.width = img.src.width;
   height = canvas.height = img.src.height;
 
-  start();
+  formatData();
 });
 
 
-function start() {
+function formatData() {
   ctx = canvas.getContext('2d'); // set canvas rendering context
   ctx.drawImage(img.src, 0, 0);
 
@@ -62,9 +62,7 @@ function start() {
     obj.destY = parseInt(index / width, 10);
     obj.destX = index - obj.destY * width; 
   })
-
-  document.body.appendChild(canvas);
-  setTimeout(() => { requestAnimationFrame(move); }, 1000);
+  setTimeout(() => { requestAnimationFrame(animate); }, 1000);
 }
 
 function interpolate(t) {
@@ -78,17 +76,17 @@ function lerp(a, b, t) {
 }
 
 // animation
-function move() {
+function animate() {
   var hasMore = false;
 
   var imgData = ctx.getImageData(0, 0, width, height);
   var pixels = imgData.data; // one pixel has four components
 
   originalArray.forEach((point) => {          
-    if (currentStage === 1 && point.frame < point.timeSpan) {
+    if (currentState === 1 && point.frame < point.timeSpan) {
       point.frame += 1;
       hasMore = true;
-    }  else if (currentStage === 2 && point.frame > 0) {
+    }  else if (currentState === 2 && point.frame > 0) {
       point.frame -= 1;
       hasMore = true;
     }
@@ -109,12 +107,12 @@ function move() {
 
   ctx.putImageData(imgData, 0, 0); // redraw img for animation frame
 
-  // recursive function call
+  // recursion
   if (!hasMore) {
-    currentStage = 3 - currentStage;
+    currentState = 3 - currentState;
     hasMore = true;
-    setTimeout(() => requestAnimationFrame(move), 1000);
+    setTimeout(() => requestAnimationFrame(animate), 1000);
   } else {
-    requestAnimationFrame(move);
+    requestAnimationFrame(animate);
   }
 }
